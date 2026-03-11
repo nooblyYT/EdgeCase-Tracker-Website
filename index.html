@@ -1,12 +1,48 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>EDGECRAFT SERVER</title>
+<title>EDGECRAFT SERVER TRACKER</title>
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<link rel="stylesheet" href="style.css">
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:linear-gradient(135deg,#a259ff,#ff6ac1);
+color:white;
+}
+
+header{
+text-align:center;
+padding:30px;
+font-size:40px;
+font-weight:bold;
+}
+
+.container{
+max-width:900px;
+margin:auto;
+padding:20px;
+}
+
+.card{
+background:rgba(0,0,0,0.25);
+padding:20px;
+border-radius:12px;
+margin-bottom:20px;
+}
+
+.player{
+padding:4px;
+border-bottom:1px solid rgba(255,255,255,0.2);
+}
+
+</style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </head>
 
 <body>
@@ -18,7 +54,7 @@
 <div class="card">
 <h2>Server Status</h2>
 <div id="status">Loading...</div>
-<div id="uptime"></div>
+<div id="latency"></div>
 </div>
 
 <div class="card">
@@ -33,23 +69,109 @@
 </div>
 
 <div class="card">
-<h2>Online Player List</h2>
+<h2>Player List</h2>
 <div id="playerlist"></div>
 </div>
 
 <div class="card">
-<h2>Player Activity</h2>
-<canvas id="playerChart"></canvas>
+<h2>Player Graph</h2>
+<canvas id="graph"></canvas>
 </div>
 
 <div class="card">
-<h2>Last Updated</h2>
+<h2>Last Checked</h2>
 <div id="updated"></div>
 </div>
 
 </div>
 
-<script src="script.js"></script>
+<script>
+
+const SERVER="edgecraft.sparkedservers.us"
+const API=`https://api.mcsrvstat.us/2/${SERVER}`
+
+let history=[]
+let labels=[]
+
+const ctx=document.getElementById("graph")
+
+const chart=new Chart(ctx,{
+type:"line",
+data:{
+labels:labels,
+datasets:[{
+label:"Players",
+data:history
+}]
+}
+})
+
+async function updateServer(){
+
+try{
+
+const res=await fetch(API)
+const data=await res.json()
+
+document.getElementById("status").innerHTML=
+data.online ? "🟢 ONLINE":"🔴 OFFLINE"
+
+document.getElementById("latency").innerHTML=
+"Latency: "+(data.debug?.ping||"unknown")+" ms"
+
+if(data.players){
+
+document.getElementById("players").innerHTML=
+data.players.online+" / "+data.players.max
+
+history.push(data.players.online)
+labels.push(new Date().toLocaleTimeString())
+
+if(history.length>30){
+history.shift()
+labels.shift()
+}
+
+chart.update()
+
+}
+
+document.getElementById("version").innerHTML=
+"Version: "+(data.version||"Unknown")
+
+if(data.motd){
+
+document.getElementById("motd").innerHTML=
+data.motd.clean.join(" ")
+
+}
+
+if(data.players?.list){
+
+document.getElementById("playerlist").innerHTML=
+data.players.list.map(p=>`<div class="player">${p}</div>`).join("")
+
+}else{
+
+document.getElementById("playerlist").innerHTML="Hidden by server"
+
+}
+
+document.getElementById("updated").innerHTML=
+new Date().toLocaleTimeString()
+
+}catch{
+
+document.getElementById("status").innerHTML="API ERROR"
+
+}
+
+}
+
+updateServer()
+setInterval(updateServer,5000)
+
+</script>
 
 </body>
 </html>
