@@ -4,44 +4,9 @@
 <title>EDGECRAFT SERVER</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<style>
-body{
-    font-family: Arial;
-    margin:0;
-    color:white;
-    background:linear-gradient(135deg,#a259ff,#ff6ac1);
-}
+<link rel="stylesheet" href="style.css">
 
-header{
-    text-align:center;
-    padding:30px;
-    font-size:40px;
-    font-weight:bold;
-}
-
-.container{
-    max-width:900px;
-    margin:auto;
-    padding:20px;
-}
-
-.card{
-    background:rgba(0,0,0,0.25);
-    padding:20px;
-    margin-bottom:20px;
-    border-radius:12px;
-}
-
-h2{
-    margin-top:0;
-    color:#ffd1ff;
-}
-
-.player{
-    padding:4px 0;
-    border-bottom:1px solid rgba(255,255,255,0.2);
-}
-</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -53,11 +18,12 @@ h2{
 <div class="card">
 <h2>Server Status</h2>
 <div id="status">Loading...</div>
+<div id="uptime"></div>
 </div>
 
 <div class="card">
 <h2>Players Online</h2>
-<div id="players">Loading...</div>
+<div id="players"></div>
 </div>
 
 <div class="card">
@@ -72,71 +38,18 @@ h2{
 </div>
 
 <div class="card">
+<h2>Player Activity</h2>
+<canvas id="playerChart"></canvas>
+</div>
+
+<div class="card">
 <h2>Last Updated</h2>
 <div id="updated"></div>
 </div>
 
 </div>
 
-<script>
-
-const SERVER = "edgecraft.sparkedservers.us"
-const API = `https://api.mcsrvstat.us/2/${SERVER}`
-
-async function updateServer(){
-
-    try{
-
-        const res = await fetch(API)
-        const data = await res.json()
-
-        // STATUS
-        document.getElementById("status").innerHTML =
-            data.online ? "🟢 ONLINE" : "🔴 OFFLINE"
-
-        // PLAYER COUNT
-        if(data.players){
-            document.getElementById("players").innerHTML =
-                `${data.players.online} / ${data.players.max}`
-        }
-
-        // VERSION
-        document.getElementById("version").innerHTML =
-            `Version: ${data.version || "Unknown"}`
-
-        // MOTD
-        if(data.motd){
-            document.getElementById("motd").innerHTML =
-                `MOTD: ${data.motd.clean.join(" ")}`
-        }
-
-        // PLAYER LIST
-        const playerDiv = document.getElementById("playerlist")
-
-        if(data.players && data.players.list){
-
-            playerDiv.innerHTML = data.players.list
-                .map(p => `<div class="player">${p}</div>`)
-                .join("")
-
-        }else{
-            playerDiv.innerHTML = "Player list hidden"
-        }
-
-        // LAST UPDATED
-        document.getElementById("updated").innerHTML =
-            new Date().toLocaleTimeString()
-
-    }catch(err){
-        document.getElementById("status").innerHTML="ERROR"
-    }
-
-}
-
-updateServer()
-setInterval(updateServer,5000)
-
-</script>
+<script src="script.js"></script>
 
 </body>
 </html>
